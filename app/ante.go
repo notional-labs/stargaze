@@ -15,7 +15,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	feeabsante "github.com/osmosis-labs/fee-abstraction/v7/x/feeabs/ante"
 	feeabskeeper "github.com/osmosis-labs/fee-abstraction/v7/x/feeabs/keeper"
-	globalfeeante "github.com/public-awesome/stargaze/v13/x/globalfee/ante"
 	globalfeekeeper "github.com/public-awesome/stargaze/v13/x/globalfee/keeper"
 )
 
@@ -65,9 +64,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		// limit simulation gas
-		feeabsante.NewFeeAbstrationMempoolFeeDecorator(options.FeeAbskeeper),
 		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit),
-		globalfeeante.NewFeeDecorator(options.Codec, options.globalfeeKeeper, options.stakingKeeper),
+		feeabsante.NewFeeAbstrationMempoolFeeDecorator(options.FeeAbskeeper),
+		// globalfeeante.NewFeeDecorator(options.Codec, options.globalfeeKeeper, options.stakingKeeper),
 		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreKey),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
