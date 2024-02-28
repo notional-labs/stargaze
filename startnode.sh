@@ -2,7 +2,7 @@
 set -eux
 # create users
 rm -rf $HOME/.starsd
-STARSD_FILE=./bin/starsd
+STARSD_FILE=starsd
 $STARSD_FILE config chain-id localnet-1
 $STARSD_FILE config keyring-backend test
 $STARSD_FILE config output json
@@ -14,18 +14,19 @@ VALIDATOR=$($STARSD_FILE keys show validator -a)
 CREATOR=$($STARSD_FILE keys show creator -a)
 INVESTOR=$($STARSD_FILE keys show investor -a)
 FUNDER=$($STARSD_FILE keys show funder -a)
+RELAYER=stars19m0thsu0lumjw88mfjjepry43vmz7kh4cftpfs
 DENOM=ustars
 # setup chain
 $STARSD_FILE init stargaze --chain-id localnet-1
-sed -i "s/\"stake\"/\"$DENOM\"/g" ~/.starsd/config/genesis.json
+gsed -i "s/\"stake\"/\"$DENOM\"/g" ~/.starsd/config/genesis.json
 # modify config for development
 config="$HOME/.starsd/config/config.toml"
 if [ "$(uname)" = "Linux" ]; then
-  sed -i "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
+  gsed -i "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
 else
-  sed -i '' "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
+  gsed -i "s/cors_allowed_origins = \[\]/cors_allowed_origins = [\"*\"]/g" $config
 fi
-sed -i "s/\"stake\"/\"$DENOM\"/g" ~/.starsd/config/genesis.json
+gsed -i "s/\"stake\"/\"$DENOM\"/g" ~/.starsd/config/genesis.json
 # modify genesis params for localnet ease of use
 # x/gov params change
 # reduce voting period to 2 minutes
@@ -39,6 +40,10 @@ $STARSD_FILE genesis add-genesis-account $VALIDATOR 10000000000000000ustars
 $STARSD_FILE genesis add-genesis-account $CREATOR 10000000000000000ustars
 $STARSD_FILE genesis add-genesis-account $INVESTOR 10000000000000000ustars
 $STARSD_FILE genesis add-genesis-account $FUNDER 10000000000000000ustars
+$STARSD_FILE genesis add-genesis-account $RELAYER 10000000000000000ustars
+\
+
+
 $STARSD_FILE genesis gentx validator 10000000000ustars --chain-id localnet-1 --keyring-backend test
 $STARSD_FILE genesis collect-gentxs
 $STARSD_FILE genesis validate-genesis
