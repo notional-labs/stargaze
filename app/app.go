@@ -127,9 +127,9 @@ import (
 	ibchookskeeper "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7/keeper"
 	ibchookstypes "github.com/cosmos/ibc-apps/modules/ibc-hooks/v7/types"
 
-	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router"
-	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router/keeper"
-	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/router/types"
+	packetforward "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward"
+	packetforwardkeeper "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/keeper"
+	packetforwardtypes "github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7/packetforward/types"
 
 	//  ica
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
@@ -139,6 +139,9 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	stargazerest "github.com/public-awesome/stargaze/v13/internal/rest"
 
+	feeabsmodule "github.com/osmosis-labs/fee-abstraction/v7/x/feeabs"
+	feeabskeeper "github.com/osmosis-labs/fee-abstraction/v7/x/feeabs/keeper"
+	feeabstypes "github.com/osmosis-labs/fee-abstraction/v7/x/feeabs/types"
 	sgappparams "github.com/public-awesome/stargaze/v13/app/params"
 	sgstatesync "github.com/public-awesome/stargaze/v13/internal/statesync"
 )
@@ -210,6 +213,7 @@ var (
 		ica.AppModuleBasic{},
 		ibchooks.AppModuleBasic{},
 		packetforward.AppModuleBasic{},
+		feeabsmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -229,6 +233,8 @@ var (
 		cronmoduletypes.ModuleName:          nil,
 		globalfeemoduletypes.ModuleName:     nil,
 		tokenfactorytypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		feeabstypes.ModuleName:              nil,
+
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -308,6 +314,7 @@ type App struct {
 	PacketForwardKeeper *packetforwardkeeper.Keeper
 
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+	FeeabsKeeper feeabskeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -351,6 +358,8 @@ func NewStargazeApp(
 		ibchookstypes.StoreKey,
 		packetforwardtypes.StoreKey,
 		crisistypes.StoreKey,
+		feeabstypes.StoreKey,
+
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -385,6 +394,8 @@ func NewStargazeApp(
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedFeeabsKeeper := app.CapabilityKeeper.ScopeToModule(feeabstypes.ModuleName)
+
 	app.CapabilityKeeper.Seal()
 	// this line is used by starport scaffolding # stargate/app/scopedKeeper
 
@@ -512,13 +523,13 @@ func NewStargazeApp(
 	app.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
 		appCodec,
 		app.keys[packetforwardtypes.StoreKey],
-		app.GetSubspace(packetforwardtypes.ModuleName),
 		app.TransferKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		app.DistrKeeper,
 		app.BankKeeper,
 		// The ICS4Wrapper is replaced by the HooksICS4Wrapper instead of the channel so that sending can be overridden by the middleware
 		app.HooksICS4Wrapper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	/*
@@ -673,7 +684,18 @@ func NewStargazeApp(
 	app.TokenFactoryKeeper = tokenfactoryKeeper
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
-
+	app.FeeabsKeeper = feeabskeeper.NewKeeper(
+		appCodec,
+		keys[feeabstypes.StoreKey],
+		app.GetSubspace(feeabstypes.ModuleName),
+		app.StakingKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.TransferKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedFeeabsKeeper,
+	)
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -712,7 +734,7 @@ func NewStargazeApp(
 		globalfeeModule,
 		ibchooks.NewAppModule(app.AccountKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		packetforward.NewAppModule(app.PacketForwardKeeper),
+		packetforward.NewAppModule(app.PacketForwardKeeper, app.GetSubspace(packetforwardtypes.ModuleName)),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		// this line is used by starport scaffolding # stargate/app/appModule
 
@@ -726,6 +748,7 @@ func NewStargazeApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName,
 		allocmoduletypes.ModuleName, // must run before distribution begin blocker
+		feeabstypes.ModuleName,
 		distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
 		ibcexported.ModuleName, ibctransfertypes.ModuleName,
@@ -743,6 +766,8 @@ func NewStargazeApp(
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
+		feeabstypes.ModuleName,
+
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
 		slashingtypes.ModuleName, minttypes.ModuleName,
 		genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
@@ -791,6 +816,7 @@ func NewStargazeApp(
 		globalfeemoduletypes.ModuleName, // should be after wasm
 		ibchookstypes.ModuleName,
 		packetforwardtypes.ModuleName,
+		feeabstypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -822,6 +848,7 @@ func NewStargazeApp(
 			WasmConfig:        &wasmConfig,
 			TXCounterStoreKey: keys[wasmtypes.StoreKey],
 			Codec:             app.appCodec,
+			FeeAbskeeper:      app.FeeabsKeeper,
 		},
 	)
 	if err != nil {
@@ -1050,6 +1077,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(globalfeemoduletypes.ModuleName)
 	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
+	paramsKeeper.Subspace(feeabstypes.ModuleName)
+
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper
