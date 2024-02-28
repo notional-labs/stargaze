@@ -65,7 +65,7 @@ func Test_IteratePrivileged(t *testing.T) {
 	expectedContractCount := 2
 
 	count := 0
-	k.IteratePrivileged(ctx, func(addr sdk.AccAddress) bool {
+	k.IteratePrivileged(ctx, func(_ sdk.AccAddress) bool {
 		count++
 		return false
 	})

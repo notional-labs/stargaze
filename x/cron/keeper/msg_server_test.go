@@ -19,7 +19,7 @@ func TestPromoteToPrivilegedContract(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
 				msg := types.MsgPromoteToPrivilegedContract{
 					Authority: "👻",
 					Contract:  sample.AccAddress().String(),
@@ -30,7 +30,7 @@ func TestPromoteToPrivilegedContract(t *testing.T) {
 		},
 		{
 			"sender not gov module or whitelisted addr",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
 				sender := sample.AccAddress()
 				msg := types.MsgPromoteToPrivilegedContract{
 					Authority: sender.String(),
@@ -42,7 +42,7 @@ func TestPromoteToPrivilegedContract(t *testing.T) {
 		},
 		{
 			"contract does not exist",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
+			func(_ sdk.Context, keeper keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
 				govModuleAddr := keeper.GetAuthority()
 				msg := types.MsgPromoteToPrivilegedContract{
 					Authority: govModuleAddr,
@@ -54,7 +54,7 @@ func TestPromoteToPrivilegedContract(t *testing.T) {
 		},
 		{
 			"valid via x/gov",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
+			func(_ sdk.Context, keeper keeper.Keeper) *types.MsgPromoteToPrivilegedContract {
 				govModuleAddr := keeper.GetAuthority()
 				msg := types.MsgPromoteToPrivilegedContract{
 					Authority: govModuleAddr,
@@ -115,7 +115,7 @@ func TestDemoteFromPrivilegedContract(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
 				msg := types.MsgDemoteFromPrivilegedContract{
 					Authority: "👻",
 					Contract:  sample.AccAddress().String(),
@@ -126,7 +126,7 @@ func TestDemoteFromPrivilegedContract(t *testing.T) {
 		},
 		{
 			"sender not gov module or whitelisted addr",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
 				sender := sample.AccAddress()
 				msg := types.MsgDemoteFromPrivilegedContract{
 					Authority: sender.String(),
@@ -138,7 +138,7 @@ func TestDemoteFromPrivilegedContract(t *testing.T) {
 		},
 		{
 			"contract does not exist",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
+			func(_ sdk.Context, keeper keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
 				govModuleAddr := keeper.GetAuthority()
 				msg := types.MsgDemoteFromPrivilegedContract{
 					Authority: govModuleAddr,
@@ -150,7 +150,7 @@ func TestDemoteFromPrivilegedContract(t *testing.T) {
 		},
 		{
 			"contract curretly does not have privilege to demote it",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
+			func(_ sdk.Context, keeper keeper.Keeper) *types.MsgDemoteFromPrivilegedContract {
 				govModuleAddr := keeper.GetAuthority()
 				msg := types.MsgDemoteFromPrivilegedContract{
 					Authority: govModuleAddr,
@@ -229,7 +229,7 @@ func TestUpdateParams(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgUpdateParams {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgUpdateParams {
 				msg := types.MsgUpdateParams{
 					Authority: "👻",
 					Params:    types.DefaultParams(),
@@ -240,7 +240,7 @@ func TestUpdateParams(t *testing.T) {
 		},
 		{
 			"sender not gov module",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgUpdateParams {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgUpdateParams {
 				sender := sample.AccAddress()
 				msg := types.MsgUpdateParams{
 					Authority: sender.String(),
@@ -252,7 +252,7 @@ func TestUpdateParams(t *testing.T) {
 		},
 		{
 			"params admin address invalid",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgUpdateParams {
+			func(_ sdk.Context, keeper keeper.Keeper) *types.MsgUpdateParams {
 				govModuleAddr := keeper.GetAuthority()
 				msg := types.MsgUpdateParams{
 					Authority: govModuleAddr,
@@ -266,7 +266,7 @@ func TestUpdateParams(t *testing.T) {
 		},
 		{
 			"valid via x/gov",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgUpdateParams {
+			func(_ sdk.Context, keeper keeper.Keeper) *types.MsgUpdateParams {
 				govModuleAddr := keeper.GetAuthority()
 				msg := types.MsgUpdateParams{
 					Authority: govModuleAddr,
