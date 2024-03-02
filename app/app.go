@@ -172,6 +172,9 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		upgradeclient.LegacyProposalHandler,
 		upgradeclient.LegacyCancelProposalHandler,
 		ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
+		feeabsmodule.UpdateAddHostZoneClientProposalHandler,
+		feeabsmodule.UpdateDeleteHostZoneClientProposalHandler,
+		feeabsmodule.UpdateSetHostZoneClientProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 	return govProposalHandlers
@@ -499,13 +502,6 @@ func NewStargazeApp(
 		app.Ics20WasmHooks,
 	)
 
-	// register the proposal types
-	govRouter := legacygovtypes.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, legacygovtypes.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
-
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
@@ -653,6 +649,19 @@ func NewStargazeApp(
 	ibcRouter.AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper))
 	app.IBCKeeper.SetRouter(ibcRouter)
 
+	app.FeeabsKeeper = feeabskeeper.NewKeeper(
+		appCodec,
+		keys[feeabstypes.StoreKey],
+		app.GetSubspace(feeabstypes.ModuleName),
+		app.StakingKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.TransferKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedFeeabsKeeper,
+	)
+
 	govKeeper := govkeeper.NewKeeper(
 		appCodec,
 		keys[govtypes.StoreKey],
@@ -665,6 +674,14 @@ func NewStargazeApp(
 	)
 
 	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks())
+	// register the proposal types
+	govRouter := legacygovtypes.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, legacygovtypes.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(&app.UpgradeKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(feeabstypes.RouterKey, feeabsmodule.NewHostZoneProposal(app.FeeabsKeeper))
+
 	app.GovKeeper.SetLegacyRouter(govRouter)
 	app.AllocKeeper = *allocmodulekeeper.NewKeeper(
 		appCodec,
@@ -684,18 +701,7 @@ func NewStargazeApp(
 	app.TokenFactoryKeeper = tokenfactoryKeeper
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
-	app.FeeabsKeeper = feeabskeeper.NewKeeper(
-		appCodec,
-		keys[feeabstypes.StoreKey],
-		app.GetSubspace(feeabstypes.ModuleName),
-		app.StakingKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.TransferKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		&app.IBCKeeper.PortKeeper,
-		scopedFeeabsKeeper,
-	)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -748,7 +754,6 @@ func NewStargazeApp(
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName,
 		allocmoduletypes.ModuleName, // must run before distribution begin blocker
-		feeabstypes.ModuleName,
 		distrtypes.ModuleName, slashingtypes.ModuleName,
 		evidencetypes.ModuleName, stakingtypes.ModuleName,
 		ibcexported.ModuleName, ibctransfertypes.ModuleName,
@@ -762,11 +767,11 @@ func NewStargazeApp(
 		ibchookstypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		packetforwardtypes.ModuleName,
+		feeabstypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName, govtypes.ModuleName, stakingtypes.ModuleName,
-		feeabstypes.ModuleName,
 
 		capabilitytypes.ModuleName, authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName,
 		slashingtypes.ModuleName, minttypes.ModuleName,
@@ -782,6 +787,7 @@ func NewStargazeApp(
 		ibchookstypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		packetforwardtypes.ModuleName,
+		feeabstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -951,6 +957,9 @@ func (app *App) BlockedAddrs() map[string]bool {
 	}
 	// allow supplement pool amount to receive tokens
 	delete(modAccAddrs, authtypes.NewModuleAddress(allocmoduletypes.SupplementPoolName).String())
+	// allow feeabs module to receive tokens
+	delete(modAccAddrs, authtypes.NewModuleAddress(feeabstypes.ModuleName).String())
+
 	return modAccAddrs
 }
 
