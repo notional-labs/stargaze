@@ -31,7 +31,7 @@ require (
 	github.com/cosmos/ibc-apps/middleware/packet-forward-middleware/v7 v7.1.2
 	github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20240124225747-f055ce5b405c
 	github.com/cosmos/ibc-go/v7 v7.3.1
-	github.com/osmosis-labs/fee-abstraction/v7 v7.0.0-20240227085732-7a240b86cd11
+	github.com/osmosis-labs/fee-abstraction/v7 v7.0.0-20240302165344-d32627920fad
 	github.com/prometheus/client_golang v1.17.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
 )
