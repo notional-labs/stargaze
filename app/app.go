@@ -647,7 +647,6 @@ func NewStargazeApp(
 	globalfeeModule := globalfeemodule.NewAppModule(appCodec, app.GlobalFeeKeeper)
 
 	ibcRouter.AddRoute(wasmtypes.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper))
-	app.IBCKeeper.SetRouter(ibcRouter)
 
 	app.FeeabsKeeper = feeabskeeper.NewKeeper(
 		appCodec,
@@ -661,6 +660,8 @@ func NewStargazeApp(
 		&app.IBCKeeper.PortKeeper,
 		scopedFeeabsKeeper,
 	)
+	ibcRouter.AddRoute(feeabstypes.ModuleName, feeabsmodule.NewIBCModule(appCodec, app.FeeabsKeeper))
+	app.IBCKeeper.SetRouter(ibcRouter)
 
 	govKeeper := govkeeper.NewKeeper(
 		appCodec,
