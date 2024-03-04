@@ -69,7 +69,7 @@ func Test_CodeAuthorization(t *testing.T) {
 		require.NoError(t, err)
 
 		count := 0
-		k.IterateCodeAuthorizations(ctx, func(ca types.CodeAuthorization) bool {
+		k.IterateCodeAuthorizations(ctx, func(_ types.CodeAuthorization) bool {
 			count++
 			return false
 		})

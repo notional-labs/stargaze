@@ -71,7 +71,7 @@ func Test_ContractAuthorization(t *testing.T) {
 		require.NoError(t, err)
 
 		count := 0
-		k.IterateContractAuthorizations(ctx, func(ca types.ContractAuthorization) bool {
+		k.IterateContractAuthorizations(ctx, func(_ types.ContractAuthorization) bool {
 			count++
 			return false
 		})

@@ -19,7 +19,7 @@ func TestSetCodeAuthorization(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgSetCodeAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgSetCodeAuthorization {
 				msg := types.MsgSetCodeAuthorization{
 					Sender: "👻",
 					CodeAuthorization: &types.CodeAuthorization{
@@ -33,7 +33,7 @@ func TestSetCodeAuthorization(t *testing.T) {
 		},
 		{
 			"sender not privileged",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgSetCodeAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgSetCodeAuthorization {
 				sender := sample.AccAddress()
 				msg := types.MsgSetCodeAuthorization{
 					Sender: sender.String(),
@@ -113,7 +113,7 @@ func TestRemoveCodeAuthorization(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgRemoveCodeAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgRemoveCodeAuthorization {
 				msg := types.MsgRemoveCodeAuthorization{
 					Sender: "👻",
 					CodeID: 2,
@@ -124,7 +124,7 @@ func TestRemoveCodeAuthorization(t *testing.T) {
 		},
 		{
 			"sender not privileged",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgRemoveCodeAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgRemoveCodeAuthorization {
 				sender := sample.AccAddress()
 				msg := types.MsgRemoveCodeAuthorization{
 					Sender: sender.String(),
@@ -188,7 +188,7 @@ func TestSetContractAuthorization(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgSetContractAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgSetContractAuthorization {
 				msg := types.MsgSetContractAuthorization{
 					Sender: "👻",
 					ContractAuthorization: &types.ContractAuthorization{
@@ -202,7 +202,7 @@ func TestSetContractAuthorization(t *testing.T) {
 		},
 		{
 			"sender not privileged",
-			func(ctx sdk.Context, keeper keeper.Keeper) *types.MsgSetContractAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper) *types.MsgSetContractAuthorization {
 				sender := sample.AccAddress()
 				msg := types.MsgSetContractAuthorization{
 					Sender: sender.String(),
@@ -321,7 +321,7 @@ func TestRemoveContractAuthorization(t *testing.T) {
 	}{
 		{
 			"invalid sender address",
-			func(ctx sdk.Context, keeper keeper.Keeper, contractAddress string) *types.MsgRemoveContractAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper, contractAddress string) *types.MsgRemoveContractAuthorization {
 				msg := types.MsgRemoveContractAuthorization{
 					Sender:          "👻",
 					ContractAddress: contractAddress,
@@ -332,7 +332,7 @@ func TestRemoveContractAuthorization(t *testing.T) {
 		},
 		{
 			"sender not privileged",
-			func(ctx sdk.Context, keeper keeper.Keeper, contractAddress string) *types.MsgRemoveContractAuthorization {
+			func(_ sdk.Context, _ keeper.Keeper, contractAddress string) *types.MsgRemoveContractAuthorization {
 				sender := sample.AccAddress()
 				msg := types.MsgRemoveContractAuthorization{
 					Sender:          sender.String(),
@@ -344,7 +344,7 @@ func TestRemoveContractAuthorization(t *testing.T) {
 		},
 		{
 			"invalid contract address",
-			func(ctx sdk.Context, keeper keeper.Keeper, contractAddress string) *types.MsgRemoveContractAuthorization {
+			func(ctx sdk.Context, keeper keeper.Keeper, _ string) *types.MsgRemoveContractAuthorization {
 				sender := sample.AccAddress()
 				params := types.NewParams([]string{sender.String()})
 				err := keeper.SetParams(ctx, params)
@@ -360,7 +360,7 @@ func TestRemoveContractAuthorization(t *testing.T) {
 		},
 		{
 			"valid",
-			func(ctx sdk.Context, keeper keeper.Keeper, contractAddress string) *types.MsgRemoveContractAuthorization {
+			func(ctx sdk.Context, keeper keeper.Keeper, _ string) *types.MsgRemoveContractAuthorization {
 				sender := sample.AccAddress()
 				params := types.NewParams([]string{sender.String()})
 				err := keeper.SetParams(ctx, params)
